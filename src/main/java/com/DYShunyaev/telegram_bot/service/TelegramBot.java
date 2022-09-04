@@ -77,6 +77,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 break;
                 case "/help": sendMessage(chatId,HELP_TEXT);
                 break;
+                case "/mydata": sendMessage(chatId, selectDataUser(chatId));
+                break;
+                case "/deletedata": deleteUserDate(chatId, update.getMessage().getChat().getFirstName());
+                break;
                 default: sendMessage(chatId, "Sorry, command was not recognized.");
             }
         }
@@ -101,6 +105,17 @@ public class TelegramBot extends TelegramLongPollingBot {
             userRepository.save(user);
             log.info("User save: " + user);
         }
+    }
+
+    private void deleteUserDate(long chatId, String name) {
+        userRepository.deleteById(chatId);
+        String answer = EmojiParser.parseToUnicode(name + ", everything is deleted." + " :smirk:");
+        log.info("Delete data from " + name);
+        sendMessage(chatId, answer);
+    }
+
+    private String selectDataUser(long chatId) {
+        return userRepository.findById(chatId).toString();
     }
 
     private void startCommandReceived(long chatId, String name) {
