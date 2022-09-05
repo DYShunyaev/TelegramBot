@@ -4,21 +4,27 @@ package com.DYShunyaev.telegram_bot.service;
 import com.DYShunyaev.telegram_bot.config.BotConfig;
 import com.DYShunyaev.telegram_bot.model.User;
 import com.DYShunyaev.telegram_bot.model.UserRepository;
+import com.DYShunyaev.telegram_bot.parser.Horoscope;
 import com.vdurmont.emoji.EmojiParser;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +68,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         return config.getToken();
     }
 
+    @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
 
@@ -81,11 +88,162 @@ public class TelegramBot extends TelegramLongPollingBot {
                 break;
                 case "/deletedata": deleteUserDate(chatId, update.getMessage().getChat().getFirstName());
                 break;
+                case "horoscope":
+                    sendHoroscope(chatId, update.getMessage().getChat().getFirstName());
+                    break;
                 default: sendMessage(chatId, "Sorry, command was not recognized.");
             }
         }
 
+        else if (update.hasCallbackQuery()) {
+            String callBackData = update.getCallbackQuery().getData();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+            long messageId = update.getCallbackQuery().getMessage().getMessageId();
+
+            switch (callBackData) {
+                case "Овен" -> setHoroscope("Овен", chatId, messageId);
+                case "Телец" -> setHoroscope("Телец", chatId, messageId);
+                case "Близнецы" -> setHoroscope("Близнецы", chatId, messageId);
+                case "Рак" -> setHoroscope("Рак", chatId, messageId);
+                case "Лев" -> setHoroscope("Лев", chatId, messageId);
+                case "Дева" -> setHoroscope("Дева", chatId, messageId);
+                case "Весы" -> setHoroscope("Весы", chatId, messageId);
+                case "Скорпион" -> setHoroscope("Скорпион", chatId, messageId);
+                case "Стрелец" -> setHoroscope("Стрелец", chatId, messageId);
+                case "Козерог" -> setHoroscope("Козерог", chatId, messageId);
+                case "Водолей" -> setHoroscope("Водолей", chatId, messageId);
+                case "Рыбы" -> setHoroscope("Рыбы", chatId, messageId);
+            }
+        }
     }
+
+    private void setHoroscope(String zodiac, long chatId, long messageId) throws IOException {
+        String text = Horoscope.getHoroscope(zodiac);
+        Horoscope.clearSB();
+        EditMessageText message = new EditMessageText();
+        message.setChatId(chatId);
+        message.setText(text);
+        message.setMessageId((int) messageId);
+        try{
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error("Error occurred: " + e.getMessage());
+        }
+    }
+    private void sendHoroscope(long chatId, String name) {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Выберете знак зодиака:");
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        List<InlineKeyboardButton> row3 = new ArrayList<>();
+        List<InlineKeyboardButton> row4 = new ArrayList<>();
+        List<InlineKeyboardButton> row5 = new ArrayList<>();
+        List<InlineKeyboardButton> row6 = new ArrayList<>();
+
+        var buttonAries = new InlineKeyboardButton();
+
+        buttonAries.setText("Овен");
+        buttonAries.setCallbackData("Овен");
+
+        var buttonTaurus = new InlineKeyboardButton();
+
+        buttonTaurus.setText("Телец");
+        buttonTaurus.setCallbackData("Телец");
+
+        row1.add(buttonAries);
+        row1.add(buttonTaurus);
+
+        var buttonGemini = new InlineKeyboardButton();
+
+        buttonGemini.setText("Близнецы");
+        buttonGemini.setCallbackData("Близнецы");
+
+        var buttonCancer = new InlineKeyboardButton();
+
+        buttonCancer.setText("Рак");
+        buttonCancer.setCallbackData("Рак");
+
+        row2.add(buttonGemini);
+        row2.add(buttonCancer);
+
+        var buttonLeo = new InlineKeyboardButton();
+
+        buttonLeo.setText("Лев");
+        buttonLeo.setCallbackData("Лев");
+
+        var buttonVirgo = new InlineKeyboardButton();
+
+        buttonVirgo.setText("Дева");
+        buttonVirgo.setCallbackData("Дева");
+
+        row3.add(buttonLeo);
+        row3.add(buttonVirgo);
+
+        var buttonLibra = new InlineKeyboardButton();
+
+        buttonLibra.setText("Весы");
+        buttonLibra.setCallbackData("Весы");
+
+        var buttonScorpio = new InlineKeyboardButton();
+
+        buttonScorpio.setText("Скорпион");
+        buttonScorpio.setCallbackData("Скорпион");
+
+        row4.add(buttonLibra);
+        row4.add(buttonScorpio);
+
+        var buttonSagittarius = new InlineKeyboardButton();
+
+        buttonSagittarius.setText("Стрелец");
+        buttonSagittarius.setCallbackData("Стрелец");
+
+        var buttonCapricorn = new InlineKeyboardButton();
+
+        buttonCapricorn.setText("Козерог");
+        buttonCapricorn.setCallbackData("Козерог");
+
+        row5.add(buttonSagittarius);
+        row5.add(buttonCapricorn);
+
+        var buttonAquarius = new InlineKeyboardButton();
+
+        buttonAquarius.setText("Водолей");
+        buttonAquarius.setCallbackData("Водолей");
+
+        var buttonPisces = new InlineKeyboardButton();
+
+        buttonPisces.setText("Рыбы");
+        buttonPisces.setCallbackData("Рыбы");
+
+        row6.add(buttonAquarius);
+        row6.add(buttonPisces);
+
+        rowsInline.add(row1);
+        rowsInline.add(row2);
+        rowsInline.add(row3);
+        rowsInline.add(row4);
+        rowsInline.add(row5);
+        rowsInline.add(row6);
+
+        markupInLine.setKeyboard(rowsInline);
+        message.setReplyMarkup(markupInLine);
+
+        try{
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error("Error occurred: " + e.getMessage());
+        }
+
+     }
 
     private void registerUser(Message msg) {
 
@@ -137,7 +295,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         KeyboardRow row = new KeyboardRow();
 
         row.add("weather");
-        row.add("get random joke");
+        row.add("horoscope");
 
         keyboardRows.add(row);
 
